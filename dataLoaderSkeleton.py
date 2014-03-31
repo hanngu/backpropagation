@@ -45,7 +45,7 @@ class dataHolder:
 def extract_unique_instances(data_instance):
     unique_instances = []
     for instance in data_instance:
-        ratings_seen = [x.rating for x in uniquely_rated_instances]
+        ratings_seen = [x.rating for x in unique_instances]
         if instance.rating not in ratings_seen:
             unique_instances.append(instance)
     return unique_instances
@@ -83,7 +83,9 @@ def rank(training_set, test_set):
     training_patterns = []
     for qid in dh_training.dataset.keys():
         data_instance=dh_training.dataset[qid]
-        training_patterns.append(order_pairs(data_instance))
+        pattern = order_pairs(data_instance)
+        if pattern is not []:
+            training_patterns.append(order_pairs(data_instance))
 
     test_patterns = []
     for qid in dh_testing.dataset.keys():
@@ -91,7 +93,7 @@ def rank(training_set, test_set):
         test_patterns.append(order_pairs(data_instance))
 
     #Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
-    neural_network = backprop.NN(46,10,0.001)
+    neural_network = backprop.NeuralNetwork(46,10,0.001)
 
     training_performance = []
     training_performance.append(neural_network.countMisorderedPairs(test_patterns))
