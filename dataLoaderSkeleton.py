@@ -1,6 +1,6 @@
 __author__ = 'kaiolae'
 __author__ = 'kaiolae'
-import Backprop_skeleton as Bp
+import Backprop_skeleton as backprop
 
 #Class for holding your data - one object for each line in the dataset
 class dataInstance:
@@ -44,64 +44,50 @@ class dataHolder:
         return dataset
 
 
+def order_pairs(data_instance):
+    #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
+    #TODO: Hint: A good first step to get the pair ordering right, is to sort the instances based on their rating for this query. (sort by x.rating for each x in data_instance)
+    uniquely_rated_instances = []
+    for instance in data_instance:
+        ratings_seen = [x.rating for x in uniquely_rated_instances]
+        if instance.rating not in ratings_seen:
+            uniquely_rated_instances.append(instance)
+    sorted_instances = sorted(uniquely_rated_instances)
+    for i in sorted_instances:
+        for j in sorted_instances:
+            if i.rating > j.rating:
+                return (i, j),
+
+
 def runRanker(trainingset, testset):
     #TODO: Insert the code for training and testing your ranker here.
     #Dataholders for training and testset
-    dhTraining = dataHolder(trainingset)
-    dhTesting = dataHolder(testset)
-
-    #Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
-    nn = Bp.NN(46,10,0.001)
+    dh_training = dataHolder(trainingset)
+    dh_testing = dataHolder(testset)
 
     #TODO: The lists below should hold training patterns in this format: [(data1Features,data2Features), (data1Features,data3Features), ... , (dataNFeatures,dataMFeatures)]
     #TODO: The training set needs to have pairs ordered so the first item of the pair has a higher rating.
-    trainingPatterns = [] #For holding all the training patterns we will feed the network
-    testPatterns = [] #For holding all the test patterns we will feed the network
-    for qid in dhTraining.dataset.keys():
-        #This iterates through every query ID in our training set
-        dataInstance=dhTraining.dataset[qid] #All data instances (query, features, rating) for query qid
+    training_patterns = []
+    test_patterns = []
+    for qid in dh_training.dataset.keys():
+        data_instance=dh_training.dataset[qid]
+        training_patterns.append(order_pairs(data_instance))
 
-        #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
-        #TODO: Hint: A good first step to get the pair ordering right, is to sort the instances based on their rating for this query. (sort by x.rating for each x in dataInstance)
+    for qid in dh_testing.dataset.keys():
+        data_instance=dh_testing.dataset[qid]
+        test_patterns.append(order_pairs(data_instance))
 
-        uniquely_rated_instances = []
-        for instance in dataInstance:
-            ratings_seen = [x.rating for x in uniquely_rated_instances]
-            if instance.rating not in ratings_seen:
-                uniquely_rated_instances.append(instance)
+    #Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
+    neural_network = backprop.NN(46,10,0.001)
 
-        sorted_instances = sorted(uniquely_rated_instances)
-        for i in sorted_instances:
-            for j in sorted_instances:
-                if i.rating > j.rating:
-                    trainingPatterns.append((i, j),)
-
-    for qid in dhTesting.dataset.keys():
-        #This iterates through every query ID in our test set
-        dataInstance=dhTesting.dataset[qid]
-        #TODO: Store the test instances into the testPatterns array, once again as pairs.
-        #TODO: Hint: The testing will be easier for you if you also now order the pairs - it will make it easy to see if the ANN agrees with your ordering.
-        uniquely_rated_instances = []
-        for instance in dataInstance:
-            ratings_seen = [x.rating for x in uniquely_rated_instances]
-            if instance.rating not in ratings_seen:
-                uniquely_rated_instances.append(instance)
-
-        sorted_instances = sorted(uniquely_rated_instances)
-        for i in sorted_instances:
-            for j in sorted_instances:
-                if i.rating > j.rating:
-                    testPatterns.append((i, j),)
-
-    #Check ANN performance before training
     training_performance = []
-    training_performance.append(nn.countMisorderedPairs(testPatterns))
+    training_performance.append(neural_network.countMisorderedPairs(test_patterns))
     for i in range(25):
         #Running 25 iterations, measuring testing performance after each round of training.
         #Training
-        nn.train(trainingPatterns, iterations=1)
+        neural_network.train(training_patterns, iterations=1)
         #Check ANN performance after training.
-        training_performance.append(nn.countMisorderedPairs(testPatterns))
+        training_performance.append(neural_network.countMisorderedPairs(test_patterns))
 
     #TODO: Store the data returned by countMisorderedPairs and plot it, showing how training and testing errors develop.
 
