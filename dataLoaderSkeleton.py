@@ -1,5 +1,3 @@
-__author__ = 'kaiolae'
-__author__ = 'kaiolae'
 import Backprop_skeleton as backprop
 
 #Class for holding your data - one object for each line in the dataset
@@ -44,35 +42,50 @@ class dataHolder:
         return dataset
 
 
-def order_pairs(data_instance):
-    #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
-    #TODO: Hint: A good first step to get the pair ordering right, is to sort the instances based on their rating for this query. (sort by x.rating for each x in data_instance)
-    uniquely_rated_instances = []
+def extract_unique_instances(data_instance):
+    unique_instances = []
     for instance in data_instance:
         ratings_seen = [x.rating for x in uniquely_rated_instances]
         if instance.rating not in ratings_seen:
-            uniquely_rated_instances.append(instance)
+            unique_instances.append(instance)
+    return unique_instances
+
+
+def order_pairs(data_instance):
+    #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
+    #TODO: Hint: A good first step to get the pair ordering right, is to sort the instances based on their rating for this query. (sort by x.rating for each x in data_instance)
+
+
+    # Since we can safely ignore instances with the same rating
+    # we filter out any obsolete list items and return a new list
+    # of only useful elements.
+    uniquely_rated_instances = extract_unique_instances(data_instance)
+
+    # Adds all permutations of unique instance pairs where A > B holds true.
+    # By sorting our list of instances we ensure that A will always have a higher rating
+    # than B.
     sorted_instances = sorted(uniquely_rated_instances)
+    features = []
     for i in sorted_instances:
         for j in sorted_instances:
             if i.rating > j.rating:
-                return (i, j),
+                features.append((i.features, j.features,))
 
+    return features
 
-def runRanker(trainingset, testset):
-    #TODO: Insert the code for training and testing your ranker here.
-    #Dataholders for training and testset
-    dh_training = dataHolder(trainingset)
-    dh_testing = dataHolder(testset)
+def rank(training_set, test_set):
+
+    dh_training = dataHolder(training_set)
+    dh_testing = dataHolder(test_set)
 
     #TODO: The lists below should hold training patterns in this format: [(data1Features,data2Features), (data1Features,data3Features), ... , (dataNFeatures,dataMFeatures)]
     #TODO: The training set needs to have pairs ordered so the first item of the pair has a higher rating.
     training_patterns = []
-    test_patterns = []
     for qid in dh_training.dataset.keys():
         data_instance=dh_training.dataset[qid]
         training_patterns.append(order_pairs(data_instance))
 
+    test_patterns = []
     for qid in dh_testing.dataset.keys():
         data_instance=dh_testing.dataset[qid]
         test_patterns.append(order_pairs(data_instance))
@@ -89,7 +102,8 @@ def runRanker(trainingset, testset):
         #Check ANN performance after training.
         training_performance.append(neural_network.countMisorderedPairs(test_patterns))
 
+    return training_performance
     #TODO: Store the data returned by countMisorderedPairs and plot it, showing how training and testing errors develop.
 
 
-runRanker("train.txt","test.txt")
+print rank("train.txt", "test.txt")
