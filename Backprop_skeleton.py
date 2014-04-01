@@ -28,9 +28,9 @@ class NeuralNetwork:
         self.numHidden = numHidden
 
         # Current activation levels for nodes (in other words, the nodes' output value)
-        self.inputActivation = [1.0]*self.numInputs
-        self.hiddenActivations = [1.0]*self.numHidden
-        self.outputActivation = 1.0 #Assuming a single output.
+        self.inputActivation = [1.0]*self.numInputs #B
+        self.hiddenActivations = [1.0]*self.numHidden #B
+        self.outputActivation = 1.0 #Assuming a single output. #O(b)
         self.learningRate = learningRate
 
         # create weights
@@ -49,7 +49,7 @@ class NeuralNetwork:
         #For storing the previous activation levels (output levels) of all neurons
         self.prevInputActivations = []
         self.prevHiddenActivations = []
-        self.prevOutputActivation = 0
+        self.prevOutputActivation = 0 #O(a)
         #For storing the previous delta in the output and hidden layer
         self.prevDeltaOutput = 0
         self.prevDeltaHidden = [0 for i in range(self.numHidden)]
@@ -86,15 +86,25 @@ class NeuralNetwork:
 
     def computeOutputDelta(self):
         #TODO: Implement the delta function for the output layer (see exercise text)
-        pass
+        pab =1.0/(1+math.exp(-(self.prevOutputActivation-self.outputActivation)))
+        self.prevDeltaOutput = logFuncDerivative(self.prevOutputActivation) * (1-pab)
+        self.deltaOutput = logFuncDerivative(self.outputActivation) * (1-pab)
+
 
     def computeHiddenDelta(self):
         #TODO: Implement the delta function for the hidden layer (see exercise text)
-        pass
+        for i in range(self.numHidden):
+            self.prevDeltaHidden[i] = logFuncDerivative(self.prevHiddenActivations[i])*self.weightsOutput[i]*(self.prevDeltaOutput - self.deltaOutput)
+        for j in range(self.numHidden):
+            self.deltaHidden[j] = logFuncDerivative(self.hiddenActivations[j])*self.weightsOutput[j]*(self.prevDeltaOutput-self.deltaOutput)
 
     def updateWeights(self):
         #TODO: Update the weights of the network using the deltas (see exercise text)
-        pass
+        for i in range(self.numInputs):
+            for j in range(self.numHidden):
+                self.weightsInput[i][j] = self.weightsInput[i][j] + self.learningRate * ((self.prevDeltaHidden[j] * self.prevInputActivations[i]) - (self.deltaHidden[j]*self.inputActivation[i]))
+        for i in range(self.numHidden):
+            self.weightsOutput[i] = self.weightsOutput[i] + self.learningRate * ((self.prevHiddenActivations[i] * self.prevDeltaOutput) - (self.hiddenActivations[i]* self.deltaOutput))
 
     def backpropagate(self):
         self.computeOutputDelta()
@@ -116,8 +126,8 @@ class NeuralNetwork:
         #TODO: Training is done  like this (details in exercise text):
         for pattern in patterns:
             for pairs in pattern:
-                self.propagate(pairs[0])
-                self.propagate(pairs[1])
+                a_propagated = self.propagate(pairs[0])
+                b_propagated = self.propagate(pairs[1])
                 self.backpropagate()
 
     def countMisorderedPairs(self, patterns):
