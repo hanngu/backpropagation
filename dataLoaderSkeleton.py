@@ -56,24 +56,15 @@ def order_pairs(data_instance):
     #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
     #TODO: Hint: A good first step to get the pair ordering right, is to sort the instances based on their rating for this query. (sort by x.rating for each x in data_instance)
 
-
-    # Since we can safely ignore instances with the same rating
-    # we filter out any obsolete list items and return a new list
-    # of only useful elements.
-    uniquely_rated_instances = extract_unique_instances(data_instance)
-
-    # Adds all permutations of unique instance pairs where A > B holds true.
-    # By sorting our list of instances we ensure that A will always have a higher rating
-    # than B.
-    sorted_instances = sorted(uniquely_rated_instances)
     features = []
-    for i in sorted_instances:
-        for j in sorted_instances:
-            if i.rating != j.rating:
-                if i.rating > j.rating:
-                    features.append((i.features, j.features,))
+
+    for i in range(len(data_instance)-1):
+        for j in range(i+1, len(data_instance)):
+            if data_instance[i].rating != data_instance[j].rating:
+                if data_instance[i].rating > data_instance[j].rating:
+                    features.append((data_instance[i].features, data_instance[j].features,))
                 else:
-                    features.append((j.features, i.features,))
+                    features.append((data_instance[j].features, data_instance[i].features,))
 
     return features
 
@@ -101,20 +92,26 @@ def rank(training_set, test_set):
     #Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
     neural_network = backprop.NeuralNetwork(46,10,0.001)
 
-    error_percent = []
-    error_percent.append(neural_network.countMisorderedPairs(test_patterns))
+    error_percent_test = []
+    error_percent_training = []
+    error_percent_test.append(neural_network.countMisorderedPairs(test_patterns))
+    error_percent_training.append((neural_network.countMisorderedPairs(training_patterns)))
     for i in range(25):
+        print("Iteration #", i)
         #Running 25 iterations, measuring testing performance after each round of training.
         #Training
         neural_network.train(training_patterns, iterations=1)
         #Check ANN performance after training.
-        error_percent.append(neural_network.countMisorderedPairs(test_patterns))
+        error_percent_test.append(neural_network.countMisorderedPairs(test_patterns))
+        error_percent_training.append(neural_network.countMisorderedPairs(training_patterns))
 
-    plot(range(1,25+2),error_percent)
+    plot(range(1,25+2),error_percent_test, label="Test")
+    plot(range(1,25+2),error_percent_training, label="Training")
+    legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
     ylim([0,1])
     show()
 
-    return error_percent
+    return error_percent_test, error_percent_training
     #TODO: Store the data returned by countMisorderedPairs and plot it, showing how training and testing errors develop.
 
 
