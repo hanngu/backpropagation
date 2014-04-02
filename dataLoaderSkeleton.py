@@ -1,4 +1,5 @@
 import Backprop_skeleton as backprop
+from pylab import *
 
 #Class for holding your data - one object for each line in the dataset
 class dataInstance:
@@ -68,8 +69,11 @@ def order_pairs(data_instance):
     features = []
     for i in sorted_instances:
         for j in sorted_instances:
-            if i.rating > j.rating:
-                features.append((i.features, j.features,))
+            if i.rating != j.rating:
+                if i.rating > j.rating:
+                    features.append((i.features, j.features,))
+                else:
+                    features.append((j.features, i.features,))
 
     return features
 
@@ -90,21 +94,27 @@ def rank(training_set, test_set):
     test_patterns = []
     for qid in dh_testing.dataset.keys():
         data_instance=dh_testing.dataset[qid]
-        test_patterns.append(order_pairs(data_instance))
+        pattern = order_pairs(data_instance)
+        if pattern is not []:
+            test_patterns.append(order_pairs(data_instance))
 
     #Creating an ANN instance - feel free to experiment with the learning rate (the third parameter).
     neural_network = backprop.NeuralNetwork(46,10,0.001)
 
-    training_performance = []
-    training_performance.append(neural_network.countMisorderedPairs(test_patterns))
+    error_percent = []
+    error_percent.append(neural_network.countMisorderedPairs(test_patterns))
     for i in range(25):
         #Running 25 iterations, measuring testing performance after each round of training.
         #Training
         neural_network.train(training_patterns, iterations=1)
         #Check ANN performance after training.
-        training_performance.append(neural_network.countMisorderedPairs(test_patterns))
+        error_percent.append(neural_network.countMisorderedPairs(test_patterns))
 
-    return training_performance
+    plot(range(1,25+2),error_percent)
+    ylim([0,1])
+    show()
+
+    return error_percent
     #TODO: Store the data returned by countMisorderedPairs and plot it, showing how training and testing errors develop.
 
 
