@@ -43,14 +43,6 @@ class dataHolder:
         return dataset
 
 
-def extract_unique_instances(data_instance):
-    unique_instances = []
-    for instance in data_instance:
-        ratings_seen = [x.rating for x in unique_instances]
-        if instance.rating not in ratings_seen:
-            unique_instances.append(instance)
-    return unique_instances
-
 
 def order_pairs(data_instance):
     #TODO: Store the training instances into the trainingPatterns array. Remember to store them as pairs, where the first item is rated higher than the second.
@@ -58,13 +50,13 @@ def order_pairs(data_instance):
 
     features = []
 
-    for i in range(len(data_instance)-1):
-        for j in range(i+1, len(data_instance)):
-            if data_instance[i].rating != data_instance[j].rating:
-                if data_instance[i].rating > data_instance[j].rating:
-                    features.append((data_instance[i].features, data_instance[j].features,))
+    for i in data_instance:
+        for j in data_instance:
+            if i.rating != j.rating:
+                if i.rating > j.rating:
+                    features.append((i.features, j.features,))
                 else:
-                    features.append((data_instance[j].features, data_instance[i].features,))
+                    features.append((j.features, i.features,))
 
     return features
 
@@ -96,7 +88,8 @@ def rank(training_set, test_set):
     error_percent_training = []
     error_percent_test.append(neural_network.countMisorderedPairs(test_patterns))
     error_percent_training.append((neural_network.countMisorderedPairs(training_patterns)))
-    for i in range(25):
+    iterations = 20
+    for i in range(iterations):
         print("Iteration #", i)
         #Running 25 iterations, measuring testing performance after each round of training.
         #Training
@@ -105,9 +98,8 @@ def rank(training_set, test_set):
         error_percent_test.append(neural_network.countMisorderedPairs(test_patterns))
         error_percent_training.append(neural_network.countMisorderedPairs(training_patterns))
 
-    plot(range(1,25+2),error_percent_test, label="Test")
-    plot(range(1,25+2),error_percent_training, label="Training")
-    legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+    plot(range(1,iterations+2),error_percent_test, label="Test")
+    plot(range(1,iterations+2),error_percent_training, label="Training")
     ylim([0,1])
     show()
 
